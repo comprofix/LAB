@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Post-reboot script: configures DHCP, OUs, baseline GPOs, DHCP groups.
+    Post-reboot script: configures DHCP, DHCP delegation groups, OUs, baseline GPOs for LAB.local domain.
 #>
 
 # ------------------ Configurable Variables ------------------
@@ -50,7 +50,8 @@ foreach ($group in @("DHCP Administrators", "DHCP Users")) {
 }
 
 # Optional: add domain Administrator to DHCP Administrators group
-$domainAdmin = "$(Get-ADDomain).NetBIOSName\Administrator"
+$netbios = (Get-ADDomain).NetBIOSName
+$domainAdmin = "$netbios\Administrator"
 Add-ADGroupMember -Identity "DHCP Administrators" -Members $domainAdmin -ErrorAction SilentlyContinue
 Write-Host "Added $domainAdmin to 'DHCP Administrators'." -ForegroundColor Cyan
 
