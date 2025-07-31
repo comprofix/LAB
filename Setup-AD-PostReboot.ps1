@@ -93,7 +93,8 @@ $gpos = @(
 )
 
 foreach ($gpo in $gpos) {
-    if (-not (Get-GPO -Name $gpo.Name -ErrorAction SilentlyContinue)) {
+    $existingGPO = Get-GPO -Name $gpo.Name -ErrorAction SilentlyContinue
+    if (-not $existingGPO) {
         New-GPO -Name $gpo.Name | Out-Null
         New-GPLink -Name $gpo.Name -Target $gpo.Target | Out-Null
         Write-Host "Created and linked GPO '${gpo.Name}'." -ForegroundColor Cyan
@@ -101,6 +102,7 @@ foreach ($gpo in $gpos) {
         Write-Host "GPO '${gpo.Name}' already exists." -ForegroundColor Yellow
     }
 }
+
 
 # Example: set secure screensaver in Security Baseline GPO
 Set-GPRegistryValue -Name "Security Baseline" `
