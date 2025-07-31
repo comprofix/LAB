@@ -66,16 +66,14 @@ foreach ($ou in @(
     "Servers",
     "Workstations"
 )) {
-    switch ($ou) {
-        "LAB" {
-            $path = $DefaultOUPath
-        }
-        "Users","Groups","Computers" {
-            $path = $LABOU
-        }
-        "Servers","Workstations" {
-            $path = "OU=Computers,$LABOU"
-        }
+    if ($ou -eq "LAB") {
+        $path = $DefaultOUPath
+    }
+    elseif ($ou -in @("Users","Groups","Computers")) {
+        $path = $LABOU
+    }
+    else {
+        $path = "OU=Computers,$LABOU"
     }
 
     if (-not (Get-ADOrganizationalUnit -LDAPFilter "(name=$ou)" -SearchBase $path -ErrorAction SilentlyContinue)) {
