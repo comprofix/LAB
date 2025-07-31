@@ -97,9 +97,9 @@ foreach ($gpo in $gpos) {
     if (-not $existingGPO) {
         New-GPO -Name $gpo.Name | Out-Null
         New-GPLink -Name $gpo.Name -Target $gpo.Target | Out-Null
-        Write-Host "Created and linked GPO '${gpo.Name}'." -ForegroundColor Cyan
+        Write-Host "Created and linked GPO '$($gpo.Name)'." -ForegroundColor Cyan
     } else {
-        Write-Host "GPO '${gpo.Name}' already exists." -ForegroundColor Yellow
+        Write-Host "GPO '$($gpo.Name)' already exists." -ForegroundColor Yellow
     }
 }
 
