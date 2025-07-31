@@ -19,10 +19,8 @@ choco install dotnetfx -y
 choco install git.install -y
 choco install notepadplusplus -y
 choco install vcredist-all -y
-choco install winget-cli -y
 choco install nerd-fonts-hack -y
 choco install cascadiamono -y
-choco install microsoft-windows-terminal -y
 choco install powershell-core -y
 choco upgrade all --ignore-checksums -y
 
@@ -73,5 +71,15 @@ foreach ($font in $fonts) {
                      -Value $fontFileName -Force | Out-Null
     Write-Output "Registered font: $fontRegName"
 }
+
+# Install Windows Terminal
+Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -outfile $env:TEMP\Microsoft.VCLibs.x86.14.00.Desktop.appx
+Add-AppxPackage $env:TEMP\Microsoft.VCLibs.x86.14.00.Desktop.appx
+
+Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -outfile -outfile $env:TEMP\Microsoft.UI.Xaml.2.8.x64.appx
+Add-AppxPackage $env:TEMP\Microsoft.UI.Xaml.2.8.x64.appx
+
+Invoke-WebRequest -Uri https://github.com/microsoft/terminal/releases/download/v1.22.11751.0/Microsoft.WindowsTerminal_1.22.11751.0_8wekyb3d8bbwe.msixbundle -outfile $env:TEMP\Microsoft.WindowsTerminal_1.22.11751.0_8wekyb3d8bbwe.msixbundle
+Add-AppxPackage $env:TEMP\Microsoft.WindowsTerminal_1.22.11751.0_8wekyb3d8bbwe.msixbundle
 
 Write-Output "Phase 5a [END] - Software"
