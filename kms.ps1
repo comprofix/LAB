@@ -10,9 +10,11 @@ switch ($Version) {
     default { Write-Host "❌ [ERROR] - Unknown server"; exit 1 }
 }
 
+$kmsserver = "$Server" + ":1688"
+
 cscript //nologo c:\windows\system32\slmgr.vbs /upk
 cscript //nologo c:\windows\system32\slmgr.vbs /ipk $Key
-cscript //nologo c:\windows\system32\slmgr.vbs /skms $($Server):1688
+cscript //nologo c:\windows\system32\slmgr.vbs /skms $kmsserver
 cscript //nologo c:\windows\system32\slmgr.vbs /ato
 
 
