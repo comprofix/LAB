@@ -13,7 +13,7 @@ switch ($Version) {
 cscript //nologo c:\windows\system32\slmgr.vbs /upk
 cscript //nologo c:\windows\system32\slmgr.vbs /ipk $Key
 cscript //nologo c:\windows\system32\slmgr.vbs /ipk $Key
-cscript //nologo c:\windows\system32\slmgr.vbs /skms $server:1688
+cscript //nologo c:\windows\system32\slmgr.vbs /skms "$Server":1688
 cscript //nologo c:\windows\system32\slmgr.vbs /ato
 
 
