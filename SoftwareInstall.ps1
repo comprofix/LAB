@@ -26,6 +26,9 @@ choco install microsoft-windows-terminal -y
 choco install powershell-core -y
 choco upgrade all --ignore-checksums -y
 
+Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+refreshenv
+
 Write-Output "Phase 5a [INFO] - Cloning and installing Segoe UI Linux fonts"
 
 # Define repo and clone path
@@ -47,7 +50,7 @@ if (!(Test-Path $clonePath)) {
 }
 
 # Install fonts
-$fontsPath = Join-Path $clonePath 'font'
+$fontsPath = Join-Path $clonePath 'fonts'
 $fonts = Get-ChildItem -Path $fontsPath -Include *.ttf,*.otf -Recurse
 
 foreach ($font in $fonts) {
