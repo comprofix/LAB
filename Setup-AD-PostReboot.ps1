@@ -51,7 +51,7 @@ foreach ($group in @("DHCP Administrators", "DHCP Users")) {
 
 # Optional: add domain Administrator to DHCP Administrators group
 $netbios = (Get-ADDomain).NetBIOSName
-$domainAdmin = "$netbios\Administrator"
+$domainAdmin = "Administrator"
 Add-ADGroupMember -Identity "DHCP Administrators" -Members $domainAdmin -ErrorAction SilentlyContinue
 Write-Host "Added $domainAdmin to 'DHCP Administrators'." -ForegroundColor Cyan
 
