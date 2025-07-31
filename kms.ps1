@@ -10,11 +10,11 @@ switch ($Version) {
     default { Write-Host "❌ [ERROR] - Unknown server"; exit 1 }
 }
 
-cscript //nologo c:\windows\system32\slmgr.svb /upk
-cscript //nologo c:\windows\system32\slmgr.svb /ipk $Key
-cscript //nologo c:\windows\system32\slmgr.svb /ipk $Key
-cscript //nologo c:\windows\system32\slmgr.svb /skms $server:1688
-cscript //nologo c:\windows\system32\slmgr.svb /ato
+cscript //nologo c:\windows\system32\slmgr.vbs /upk
+cscript //nologo c:\windows\system32\slmgr.vbs /ipk $Key
+cscript //nologo c:\windows\system32\slmgr.vbs /ipk $Key
+cscript //nologo c:\windows\system32\slmgr.vbs /skms $server:1688
+cscript //nologo c:\windows\system32\slmgr.vbs /ato
 
 
 
