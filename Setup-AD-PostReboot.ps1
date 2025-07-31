@@ -1,5 +1,7 @@
-# Author: ChatGPT (OpenAI)
-# Part 2: Post-reboot configuration (DHCP, OUs, users, groups, GPOs)
+<#
+.SYNOPSIS
+    Post-reboot script: configures DHCP, OUs, baseline GPOs, DHCP groups.
+#>
 
 # ------------------ Configurable Variables ------------------
 $DomainName         = "LAB.local"
@@ -8,47 +10,102 @@ $DhcpStartRange     = "192.168.100.100"
 $DhcpEndRange       = "192.168.100.199"
 $DhcpSubnetMask     = "255.255.255.0"
 $DhcpGateway        = "192.168.100.1"
-$DhcpDnsServer      = "192.168.1000.2"   # This server's static IP
+$DhcpDnsServer      = "192.168.100.2"  # This server's static IP
 $DefaultOUPath      = "DC=LAB,DC=local"
 $LABOU              = "OU=LAB,$DefaultOUPath"
 
-# ------------------ Configure DHCP ------------------
-Write-Host "`nAuthorizing DHCP Server..." -ForegroundColor Cyan
-Add-DhcpServerInDC -DnsName "$env:COMPUTERNAME.$DomainName" -IPAddress $DhcpDnsServer
+# ------------------ Authorize DHCP ------------------
+Write-Host "`n[INFO] Authorizing DHCP server..." -ForegroundColor Cyan
+Add-DhcpServerInDC -DnsName "$env:COMPUTERNAME.$DomainName" -IPAddress $DhcpDnsServer -ErrorAction SilentlyContinue
 
-Write-Host "Adding DHCP scope..." -ForegroundColor Cyan
-Add-DhcpServerv4Scope `
-    -Name $DhcpScopeName `
-    -StartRange $DhcpStartRange `
-    -EndRange $DhcpEndRange `
-    -SubnetMask $DhcpSubnetMask `
-    -State Active
+# ------------------ Create DHCP scope if missing ------------------
+if (-not (Get-DhcpServerv4Scope -ScopeId 192.168.100.0 -ErrorAction SilentlyContinue)) {
+    Write-Host "[INFO] Adding DHCP scope..." -ForegroundColor Cyan
+    Add-DhcpServerv4Scope `
+        -Name $DhcpScopeName `
+        -StartRange $DhcpStartRange `
+        -EndRange $DhcpEndRange `
+        -SubnetMask $DhcpSubnetMask `
+        -State Active
 
-Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -Router $DhcpGateway
-Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -DnsServer $DhcpDnsServer
-Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -DnsDomain $DomainName
+    Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -Router $DhcpGateway
+    Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -DnsServer $DhcpDnsServer
+    Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -DnsDomain $DomainName
+} else {
+    Write-Host "[INFO] DHCP scope already exists. Skipping." -ForegroundColor Yellow
+}
 
-# ------------------ Create Default OU Structure ------------------
-Write-Host "Creating default OU structure..." -ForegroundColor Cyan
+# ------------------ Ensure DHCP security groups ------------------
+Write-Host "[INFO] Checking DHCP security groups..." -ForegroundColor Cyan
+$domainDN = (Get-ADDomain).DistinguishedName
+$usersContainer = "CN=Users,$domainDN"
 
-New-ADOrganizationalUnit -Name "LAB" -Path $DefaultOUPath -ErrorAction SilentlyContinue
-New-ADOrganizationalUnit -Name "Users" -Path $LABOU -ErrorAction SilentlyContinue
-New-ADOrganizationalUnit -Name "Groups" -Path $LABOU -ErrorAction SilentlyContinue
-New-ADOrganizationalUnit -Name "Computers" -Path $LABOU -ErrorAction SilentlyContinue
-New-ADOrganizationalUnit -Name "Servers" -Path "OU=Computers,$LABOU" -ErrorAction SilentlyContinue
-New-ADOrganizationalUnit -Name "Workstations" -Path "OU=Computers,$LABOU" -ErrorAction SilentlyContinue
+foreach ($group in @("DHCP Administrators", "DHCP Users")) {
+    if (-not (Get-ADGroup -Filter "Name -eq '$group'" -ErrorAction SilentlyContinue)) {
+        Write-Host "Creating group '$group'..." -ForegroundColor Cyan
+        New-ADGroup -Name $group -GroupScope DomainLocal -Path $usersContainer -Description "Created by setup script"
+    } else {
+        Write-Host "'$group' already exists." -ForegroundColor Yellow
+    }
+}
 
-# ------------------ Create Baseline GPOs ------------------
-Write-Host "Creating baseline GPOs..." -ForegroundColor Cyan
+# Optional: add domain Administrator to DHCP Administrators group
+$domainAdmin = "$(Get-ADDomain).NetBIOSName\Administrator"
+Add-ADGroupMember -Identity "DHCP Administrators" -Members $domainAdmin -ErrorAction SilentlyContinue
+Write-Host "Added $domainAdmin to 'DHCP Administrators'." -ForegroundColor Cyan
 
-$GPO1 = New-GPO -Name "Security Baseline" -ErrorAction SilentlyContinue
-New-GPLink -Name "Security Baseline" -Target $LABOU -ErrorAction SilentlyContinue
+# ------------------ Create default OU structure ------------------
+Write-Host "`n[INFO] Creating default OU structure..." -ForegroundColor Cyan
 
-# Example: screensaver secure
-Set-GPRegistryValue -Name "Security Baseline" -Key "HKLM\Software\Policies\Microsoft\Windows\Control Panel\Desktop" `
+foreach ($ou in @(
+    "LAB",
+    "Users",
+    "Groups",
+    "Computers",
+    "Servers",
+    "Workstations"
+)) {
+    switch ($ou) {
+        "LAB" {
+            $path = $DefaultOUPath
+        }
+        "Users","Groups","Computers" {
+            $path = $LABOU
+        }
+        "Servers","Workstations" {
+            $path = "OU=Computers,$LABOU"
+        }
+    }
+
+    if (-not (Get-ADOrganizationalUnit -LDAPFilter "(name=$ou)" -SearchBase $path -ErrorAction SilentlyContinue)) {
+        New-ADOrganizationalUnit -Name $ou -Path $path -ErrorAction SilentlyContinue
+        Write-Host "Created OU '$ou' in '$path'." -ForegroundColor Cyan
+    } else {
+        Write-Host "OU '$ou' already exists in '$path'." -ForegroundColor Yellow
+    }
+}
+
+# ------------------ Create baseline GPOs ------------------
+Write-Host "`n[INFO] Creating baseline GPOs..." -ForegroundColor Cyan
+
+$gpos = @(
+    @{ Name = "Security Baseline"; Target = $LABOU },
+    @{ Name = "Workstation Policy"; Target = "OU=Workstations,OU=Computers,$LABOU" }
+)
+
+foreach ($gpo in $gpos) {
+    if (-not (Get-GPO -Name $gpo.Name -ErrorAction SilentlyContinue)) {
+        New-GPO -Name $gpo.Name | Out-Null
+        New-GPLink -Name $gpo.Name -Target $gpo.Target | Out-Null
+        Write-Host "Created and linked GPO '${gpo.Name}'." -ForegroundColor Cyan
+    } else {
+        Write-Host "GPO '${gpo.Name}' already exists." -ForegroundColor Yellow
+    }
+}
+
+# Example: set secure screensaver in Security Baseline GPO
+Set-GPRegistryValue -Name "Security Baseline" `
+    -Key "HKLM\Software\Policies\Microsoft\Windows\Control Panel\Desktop" `
     -ValueName "ScreenSaverIsSecure" -Type DWord -Value 1 -ErrorAction SilentlyContinue
 
-$GPO2 = New-GPO -Name "Workstation Policy" -ErrorAction SilentlyContinue
-New-GPLink -Name "Workstation Policy" -Target "OU=Workstations,OU=Computers,$LABOU" -ErrorAction SilentlyContinue
-
-Write-Host "`n✅ Post-reboot setup complete! DHCP, OUs, users, groups, GPOs are ready." -ForegroundColor Green
+Write-Host "`n✅ [COMPLETE] Post-reboot setup done! DHCP, security groups, OUs, and GPOs are ready." -ForegroundColor Green

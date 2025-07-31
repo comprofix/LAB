@@ -1,13 +1,14 @@
-# Author: ChatGPT (OpenAI)
-# Part 1: Install features and promote to first DC
+<#
+.SYNOPSIS
+    Pre-reboot script: installs AD DS, DNS, DHCP, promotes to DC if not already a DC.
+#>
 
 # ------------------ Configurable Variables ------------------
 $DomainName            = "LAB.local"
 $DomainNetbios         = "LAB"
 $SafeModeAdminPassword = Read-Host -Prompt "Enter DSRM password" -AsSecureString
 
-# ------------------ Install Features ------------------
-Write-Host "`nInstalling roles and features..." -ForegroundColor Cyan
+Write-Host "`n[INFO] Installing required Windows features..." -ForegroundColor Cyan
 
 Install-WindowsFeature `
     NET-Framework-Core, `
@@ -19,14 +20,19 @@ Install-WindowsFeature `
     RSAT-DNS-Server, `
     RSAT-DHCP -IncludeManagementTools
 
-# ------------------ Promote to Domain Controller ------------------
-Write-Host "`nPromoting this server to first Domain Controller for $DomainName..." -ForegroundColor Cyan
+# ------------------ Promote to Domain Controller if needed ------------------
+if (-not (Get-ADDomainController -ErrorAction SilentlyContinue)) {
+    Write-Host "`n[INFO] Promoting this server to first Domain Controller for $DomainName..." -ForegroundColor Cyan
 
-Install-ADDSForest `
-    -DomainName $DomainName `
-    -DomainNetbiosName $DomainNetbios `
-    -SafeModeAdministratorPassword $SafeModeAdminPassword `
-    -InstallDNS `
-    -Force
+    Install-ADDSForest `
+        -DomainName $DomainName `
+        -DomainNetbiosName $DomainNetbios `
+        -SafeModeAdministratorPassword $SafeModeAdminPassword `
+        -InstallDNS `
+        -Force `
+        -Restart
 
-Write-Host "`nServer will now reboot automatically to complete promotion." -ForegroundColor Yellow
+    # Script ends here: server will reboot automatically
+} else {
+    Write-Host "`n[INFO] This machine is already a Domain Controller. Skipping promotion." -ForegroundColor Yellow
+}
