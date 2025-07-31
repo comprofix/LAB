@@ -14,7 +14,7 @@ try {
 }
 
 # Install software
-choco install sysinternals -y
+choco install sysinternals -y --ignore-checksums
 choco install dotnetfx -y
 choco install git.install -y
 choco install notepadplusplus -y
