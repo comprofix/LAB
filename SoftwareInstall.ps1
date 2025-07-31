@@ -50,7 +50,7 @@ if (!(Test-Path $clonePath)) {
 }
 
 # Install fonts
-$fontsPath = Join-Path $clonePath 'fonts'
+$fontsPath = Join-Path $clonePath 'font'
 $fonts = Get-ChildItem -Path $fontsPath -Include *.ttf,*.otf -Recurse
 
 foreach ($font in $fonts) {
