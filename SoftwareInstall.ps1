@@ -76,7 +76,7 @@ foreach ($font in $fonts) {
 Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -outfile $env:TEMP\Microsoft.VCLibs.x86.14.00.Desktop.appx
 Add-AppxPackage $env:TEMP\Microsoft.VCLibs.x86.14.00.Desktop.appx
 
-Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -outfile -outfile $env:TEMP\Microsoft.UI.Xaml.2.8.x64.appx
+Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -outfile $env:TEMP\Microsoft.UI.Xaml.2.8.x64.appx
 Add-AppxPackage $env:TEMP\Microsoft.UI.Xaml.2.8.x64.appx
 
 Invoke-WebRequest -Uri https://github.com/microsoft/terminal/releases/download/v1.22.11751.0/Microsoft.WindowsTerminal_1.22.11751.0_8wekyb3d8bbwe.msixbundle -outfile $env:TEMP\Microsoft.WindowsTerminal_1.22.11751.0_8wekyb3d8bbwe.msixbundle
