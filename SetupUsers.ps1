@@ -13,13 +13,13 @@ ForEach ($User in $Users) {
     $SamAccountName = "$FirstName$SurnameInitial"
     $UserPrincipalName = "$SamAccountName@$Domain"
 
-    Write-Host "`nProcessing user: $DisplayName ($UserPrincipalName)" -ForegroundColor Yellow
+    Write-Host "🖨️ Processing user: $DisplayName ($UserPrincipalName)" -ForegroundColor Yellow
 
     # Check if user already exists
     $ExistingUser = Get-ADUser -Filter { SamAccountName -eq $SamAccountName } -ErrorAction SilentlyContinue
 
     if ($ExistingUser) {
-        Write-Host "User '$SamAccountName' already exists. Skipping creation." -ForegroundColor DarkGray
+        Write-Host "❗ User '$SamAccountName' already exists. Skipping creation." -ForegroundColor Red
     } else {
         Write-Host "🛠️ Creating user '$SamAccountName'..." -ForegroundColor Cyan
         $UserPassword = ConvertTo-SecureString "P@ssw0rd123!" -AsPlainText -Force
