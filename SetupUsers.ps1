@@ -1,9 +1,7 @@
 param(
     [string]$Domain,
     [string]$OU
-
 )
-
 
 $Users = Import-Csv .\Users.csv
 
@@ -11,21 +9,37 @@ ForEach ($User in $Users) {
     $DisplayName = $User.DisplayName
     $FirstName = $User.FirstName
     $Surname = $User.Surname
-    $SurnameInitial = $User.Surname[0]
+    $SurnameInitial = $Surname[0]
+    $SamAccountName = "$FirstName$SurnameInitial"
+    $UserPrincipalName = "$SamAccountName@$Domain"
 
-    Write-Host $DisplayName "$FirstName$SurnameInitial@$Domain"
+    Write-Host "`nProcessing user: $DisplayName ($UserPrincipalName)" -ForegroundColor Yellow
 
-    Write-Host "Creating sample users..." -ForegroundColor Cyan
-    $UserPassword = ConvertTo-SecureString "P@ssw0rd123!" -AsPlainText -Force
+    # Check if user already exists
+    $ExistingUser = Get-ADUser -Filter { SamAccountName -eq $SamAccountName } -ErrorAction SilentlyContinue
 
-    New-ADUser -Name "$DisplayName" -GivenName "$FirstName" -Surname "$Surname" `
-        -SamAccountName "$FirstName$SurnameInitial" -UserPrincipalName "$FirstName$SurnameInitial@$Domain" `
-        -AccountPassword $UserPassword -Enabled $true `
-        -Path "$OU" -ErrorAction SilentlyContinue
+    if ($ExistingUser) {
+        Write-Host "User '$SamAccountName' already exists. Skipping creation." -ForegroundColor DarkGray
+    } else {
+        Write-Host "🛠️ Creating user '$SamAccountName'..." -ForegroundColor Cyan
+        $UserPassword = ConvertTo-SecureString "P@ssw0rd123!" -AsPlainText -Force
 
-    Set-ADUser -Identity "$FirstName$SurnameInitial" -EmailAddress "$FirstName$SurnameInitial@$Domain"
-    Set-ADUser -Identity "$FirstName$SurnameInitial" -DisplayName "$DisplayName"
-    Set-ADUser -Identity "$FirstName$SurnameInitial" -Add @{proxyAddresses="SMTP:$FirstName$SurnameInitial@$Domain"}
+        New-ADUser -Name $DisplayName `
+            -GivenName $FirstName `
+            -Surname $Surname `
+            -SamAccountName $SamAccountName `
+            -UserPrincipalName $UserPrincipalName `
+            -AccountPassword $UserPassword `
+            -Enabled $true `
+            -Path $OU `
+            -ErrorAction Stop
 
+        # Set additional attributes
+        Set-ADUser -Identity $SamAccountName -EmailAddress $UserPrincipalName
+        Set-ADUser -Identity $SamAccountName -DisplayName $DisplayName
+        Set-ADUser -Identity $SamAccountName -Add @{proxyAddresses = "SMTP:$UserPrincipalName"}
 
+        Write-Host "✅ User '$SamAccountName' created successfully." -ForegroundColor Green
+        
+    }
 }
