@@ -24,7 +24,8 @@ ForEach ($User in $Users) {
         -Path "$OU" -ErrorAction SilentlyContinue
 
     Set-ADUser -Identity "$FirstName$SurnameInitial" -EmailAddress "$FirstName$SurnameInitial@$Domain"
+    Set-ADUser -Identity "$FirstName$SurnameInitial" -DisplayName "$DisplayName"
     Set-ADUser -Identity "$FirstName$SurnameInitial" -Add @{proxyAddresses="SMTP:$FirstName$SurnameInitial@$Domain"}
-    
+
 
 }
