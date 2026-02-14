@@ -7,6 +7,7 @@ param(
 switch ($Version) {
     "2019" { $key = "N69G4-B89J2-4G8F4-WWYCC-J464C" }
     "2022" { $key = "VDYBN-27WPP-V4HQT-9VMD4-VMK7H" }
+    "2025" { $key = "TVRH6-WHNXV-R9WG3-9XRFY-MY832" }
     default { Write-Host "❌ [ERROR] - Unknown server"; exit 1 }
 }
 
