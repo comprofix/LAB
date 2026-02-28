@@ -56,12 +56,8 @@ try {
     Write-Output "❌ - Failed to upgrade packages $_"
 }
 
-try {
-    $env:PATH = "C:\Program Files\Git\cmd;" + $env:PATH
-    Write-Output "✅ - Update Paths"
-} catch {
-    Write-Output "❌ - Failed to upgrade Path $_"
-}
+$env:PATH = "C:\Program Files\Git\cmd;" + $env:PATH
+Write-Output "✅ - Update Paths"
 
 # Define repo and clone path
 $fontRepo = 'https://github.com/mrbvrz/segoe-ui-linux'
