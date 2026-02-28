@@ -1,6 +1,16 @@
-# Phase 5a [START] - Software
-Write-Output "Phase 5a [START] - Software"
+Write-Output "[START] - Software"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+try {
+    Write-Output "🛠️  - Installing Chocolatey"
+    $null = Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    Write-Output "✅ - Successfully installed Chocolatey"
+} catch {
+     Write-Output "❌ - Failed to Install Chocolatey $_"
+}
+
+Import-Module C:\ProgramData\chocolatey\helpers\chocolateyProfile.psm1
+refreshenv
 
 
 # Enable Chocolatey features for smoother installs
@@ -8,26 +18,43 @@ try {
     choco feature enable -n allowEmptyChecksums | Out-Null
     choco feature enable -n allowGlobalConfirmation | Out-Null
     choco feature enable -n usePackageExitCodes | Out-Null
-    Write-Output "Phase 2 [INFO] - Enabled Chocolatey features"
+    Write-Output "✅ Enabled Chocolatey features"
 } catch {
-    Write-Output "Phase 2 [WARN] - Failed to enable Chocolatey features: $_"
+    Write-Output "❌ - Failed to enable Chocolatey features: $_"
 }
 
-# Install software
-choco install sysinternals -y --ignore-checksums
-choco install dotnetfx -y
-choco install git.install -y
-choco install notepadplusplus -y
-choco install vcredist-all -y
-choco install nerd-fonts-hack -y
-choco install cascadiamono -y
-choco install powershell-core -y
-choco upgrade all --ignore-checksums -y
+# Hashtable mapping packages to optional extra arguments
+$packages = @{
+    'sysinternals'                  = '--ignore-checksums'
+    'git.install'                   = ''
+    'notepadplusplus'               = ''
+    'vcredist140'                   = ''
+    'nerd-fonts-hack'               = ''
+    'cascadiamono'                  = ''
+    'powershell-core'               = ''
+    'microsoft-windows-terminal'    = ''
+    'winget-cli'                    = ''
+}
 
-Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-refreshenv
+# Loop through packages
+foreach ($pkg in $packages.Keys) {
+    try {
+        $args = $packages[$pkg]
+        Write-Output "🛠️  - Installing $pkg"
+        choco install $pkg -y $args | Out-Null
+        Write-Output "✅ - Successfully installed $pkg"
+    } catch {
+        Write-Output "❌ - Failed to install $pkg $_"
+    }
+}
 
-Write-Output "Phase 5a [INFO] - Cloning and installing Segoe UI Linux fonts"
+# Upgrade all packages at the end
+try {
+    choco upgrade all --ignore-checksums -y | Out-Null
+    Write-Output "✅ - Upgraded all packages"
+} catch {
+    Write-Output "❌ - Failed to upgrade packages $_"
+}
 
 # Define repo and clone path
 $fontRepo = 'https://github.com/mrbvrz/segoe-ui-linux'
@@ -42,9 +69,9 @@ if (!(Test-Path 'C:\Temp')) {
 # Clone the fonts repo if not already cloned
 if (!(Test-Path $clonePath)) {
     git clone $fontRepo $clonePath
-    Write-Output "Cloned repository to: $clonePath"
+    Write-Output "✅ - Cloned repository to: $clonePath"
 } else {
-    Write-Output "Repository already exists: $clonePath"
+    Write-Output "⚠️ - Repository already exists: $clonePath"
 }
 
 # Install fonts
@@ -56,30 +83,15 @@ foreach ($font in $fonts) {
     if (!(Test-Path $destination)) {
         Copy-Item -Path $font.FullName -Destination $destination
         Write-Output "Installed font: $($font.Name)"
+        $fontRegName = $font.BaseName
+        $fontFileName = $font.Name
+        New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" `
+                        -Name $fontRegName `
+                        -PropertyType String `
+                        -Value $fontFileName -Force | Out-Null
+        Write-Output "✅ - Registered font: $fontRegName"
     } else {
-        Write-Output "Font already exists: $($font.Name)"
+        Write-Output "⚠️ - Font already exists: $($font.Name)"
     }
 }
 
-# Add fonts to registry so they show up in Windows
-foreach ($font in $fonts) {
-    $fontRegName = $font.BaseName
-    $fontFileName = $font.Name
-    New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" `
-                     -Name $fontRegName `
-                     -PropertyType String `
-                     -Value $fontFileName -Force | Out-Null
-    Write-Output "Registered font: $fontRegName"
-}
-
-# Install Windows Terminal
-Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -outfile $env:TEMP\Microsoft.VCLibs.x86.14.00.Desktop.appx
-Add-AppxPackage $env:TEMP\Microsoft.VCLibs.x86.14.00.Desktop.appx
-
-Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -outfile $env:TEMP\Microsoft.UI.Xaml.2.8.x64.appx
-Add-AppxPackage $env:TEMP\Microsoft.UI.Xaml.2.8.x64.appx
-
-Invoke-WebRequest -Uri https://github.com/microsoft/terminal/releases/download/v1.22.11751.0/Microsoft.WindowsTerminal_1.22.11751.0_8wekyb3d8bbwe.msixbundle -outfile $env:TEMP\Microsoft.WindowsTerminal_1.22.11751.0_8wekyb3d8bbwe.msixbundle
-Add-AppxPackage $env:TEMP\Microsoft.WindowsTerminal_1.22.11751.0_8wekyb3d8bbwe.msixbundle
-
-Write-Output "Phase 5a [END] - Software"
