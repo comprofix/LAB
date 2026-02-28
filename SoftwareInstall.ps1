@@ -62,7 +62,7 @@ Expand-Archive -Path "C:\Windows\Temp\DesktopAppInstaller_Dependencies.zip" -Des
 Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.UI.Xaml*x64.appx"
 Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.VCLibs*x64.appx"
 Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.WindowsAppRuntime*x64.appx"
-Add-AppxProvisionedPackage -Online -PackagePath "C:\Windows\Temp\WinGet.msixbundle" -LicensePath .\license.xml
+Add-AppxProvisionedPackage -Online -PackagePath "C:\Windows\Temp\WinGet.msixbundle" -LicensePath "C:\Windows\Temp\license.xml"
 Get-AppPackage *Microsoft.DesktopAppInstaller*|select Name,PackageFullName
 winget --info
 
