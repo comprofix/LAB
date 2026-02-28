@@ -55,17 +55,17 @@ try {
 }
 
 # Installing Winget
-Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -Destination "~\Downloads\WinGet.msixbundle"
-Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/DesktopAppInstaller_Dependencies.zip" -Destination "~\Downloads\DesktopAppInstaller_Dependencies.zip"
-Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/e53e159d00e04f729cc2180cffd1c02e_License1.xml" -Destination "~\Downloads\license.xml"
-Expand-Archive -Path "~\Downloads\DesktopAppInstaller_Dependencies.zip"
-Add-AppxPackage "~\Downloads\DesktopAppInstaller_Dependencies\x64\Microsoft.UI.Xaml*x64.appx"
-Add-AppxPackage "~\Downloads\DesktopAppInstaller_Dependencies\x64\Microsoft.VCLibs*x64.appx"
-Add-AppxPackage "~\Downloads\DesktopAppInstaller_Dependencies\x64\Microsoft.WindowsAppRuntime*x64.appx"
-Add-AppxProvisionedPackage -Online -PackagePath "~\Downloads\WinGet.msixbundle" -LicensePath .\license.xml
+Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -Destination "$envTEMP\WinGet.msixbundle"
+Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/DesktopAppInstaller_Dependencies.zip" -Destination "$envTEMP\DesktopAppInstaller_Dependencies.zip"
+Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/e53e159d00e04f729cc2180cffd1c02e_License1.xml" -Destination "$envTEMP\license.xml"
+Expand-Archive -Path "$envTEMP\DesktopAppInstaller_Dependencies.zip"
+Add-AppxPackage "$envTEMP\DesktopAppInstaller_Dependencies\x64\Microsoft.UI.Xaml*x64.appx"
+Add-AppxPackage "$envTEMP\DesktopAppInstaller_Dependencies\x64\Microsoft.VCLibs*x64.appx"
+Add-AppxPackage "$envTEMP\DesktopAppInstaller_Dependencies\x64\Microsoft.WindowsAppRuntime*x64.appx"
+Add-AppxProvisionedPackage -Online -PackagePath "$envTEMP\WinGet.msixbundle" -LicensePath .\license.xml
 Get-AppPackage *Microsoft.DesktopAppInstaller*|select Name,PackageFullName
 winget --info
-Remove-Item -Path "~\Downloads\WinGet.msixbundle", "~\Downloads\DesktopAppInstaller_Dependencies.zip", "~\Downloads\DesktopAppInstaller_Dependencies", "~\Downloads\license.xml" -Recurse -Force
+Remove-Item -Path "$envTEMP\WinGet.msixbundle", "$envTEMP\DesktopAppInstaller_Dependencies.zip", "$envTEMP\DesktopAppInstaller_Dependencies", "$envTEMP\license.xml" -Recurse -Force
 
 
 $env:PATH = "C:\Program Files\Git\cmd;" + $env:PATH
