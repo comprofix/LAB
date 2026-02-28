@@ -40,7 +40,7 @@ $packages = @{
 foreach ($pkg in $packages.Keys) {
     try {
         $args = $packages[$pkg]
-        Write-Output "🛠️  - Installing $pkg"
+        Write-Output "🛠️  - Installing Package: $pkg"
         choco install $pkg -y $args | Out-Null
         Write-Output "✅ - Successfully installed $pkg"
     } catch {
