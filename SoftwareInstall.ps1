@@ -13,9 +13,14 @@ Get-AppPackage *Microsoft.DesktopAppInstaller* | Select-Object Name, PackageFull
 
 Install-PackageProvider -Name "NuGet" -Force
 Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
-Install-Script -Name RefreshEnv 
+Install-Script Refresh-EnvironmentVariables -Force
 Refresh-EnvironmentVariables
-winget --info
+
+Install-Script Refresh-EnvironmentVariables -Force
+
+winget update --accept-package-agreements --accept-source-agreements
+
+
 
 #RefreshEnv
 #winget --info
