@@ -11,10 +11,7 @@ Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.
 Add-AppxProvisionedPackage -Online -PackagePath "C:\Windows\Temp\WinGet.msixbundle" -LicensePath "C:\Windows\Temp\license.xml"
 Get-AppPackage *Microsoft.DesktopAppInstaller* | Select-Object Name, PackageFullName
 
-Install-PackageProvider -Name "NuGet" -Force
-Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
-Install-Script Refresh-EnvironmentVariables -Force
-Refresh-EnvironmentVariables
+Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/asheroto/Refresh-EnvironmentVariables/refs/heads/main/Refresh-EnvironmentVariables.ps1" | Invoke-Expression
 
 winget update --accept-package-agreements --accept-source-agreements
 
