@@ -1,19 +1,85 @@
 Write-Output "[START] - Software"
 
-# Installing Winget
-Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -Destination "C:\Windows\Temp\WinGet.msixbundle"
-Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/DesktopAppInstaller_Dependencies.zip" -Destination "C:\Windows\Temp\DesktopAppInstaller_Dependencies.zip"
-Start-BitsTransfer -Source "https://github.com/microsoft/winget-cli/releases/latest/download/e53e159d00e04f729cc2180cffd1c02e_License1.xml" -Destination "C:\Windows\Temp\license.xml"
-Expand-Archive -Path "C:\Windows\Temp\DesktopAppInstaller_Dependencies.zip" -DestinationPath "C:\Windows\Temp\DesktopAppInstaller_Dependencies"
-Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.UI.Xaml*x64.appx"
-Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.VCLibs*x64.appx"
-Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.WindowsAppRuntime*x64.appx"
-Add-AppxProvisionedPackage -Online -PackagePath "C:\Windows\Temp\WinGet.msixbundle" -LicensePath "C:\Windows\Temp\license.xml"
-Get-AppPackage *Microsoft.DesktopAppInstaller* | Select-Object Name, PackageFullName
+function Install-WinGet {
+    [CmdletBinding()]
+    param (
+        [int]$TimeoutSeconds = 180
+    )
 
-Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/asheroto/Refresh-EnvironmentVariables/refs/heads/main/Refresh-EnvironmentVariables.ps1" | Invoke-Expression
+    $ErrorActionPreference = "Stop"
 
-winget update --accept-package-agreements --accept-source-agreements
+    Write-Host "Installing WinGet..."
+
+    $tempPath = "C:\Windows\Temp"
+    $bundlePath = Join-Path $tempPath "WinGet.msixbundle"
+    $depsZipPath = Join-Path $tempPath "DesktopAppInstaller_Dependencies.zip"
+    $licensePath = Join-Path $tempPath "license.xml"
+    $depsExtractPath = Join-Path $tempPath "DesktopAppInstaller_Dependencies"
+
+    # Clean previous leftovers
+    Remove-Item $bundlePath,$depsZipPath,$licensePath -ErrorAction SilentlyContinue
+    Remove-Item $depsExtractPath -Recurse -Force -ErrorAction SilentlyContinue
+
+    # Download latest release assets
+    Start-BitsTransfer `
+        -Source "https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" `
+        -Destination $bundlePath
+
+    Start-BitsTransfer `
+        -Source "https://github.com/microsoft/winget-cli/releases/latest/download/DesktopAppInstaller_Dependencies.zip" `
+        -Destination $depsZipPath
+
+    Start-BitsTransfer `
+        -Source "https://github.com/microsoft/winget-cli/releases/latest/download/e53e159d00e04f729cc2180cffd1c02e_License1.xml" `
+        -Destination $licensePath
+
+    Expand-Archive -Path $depsZipPath -DestinationPath $depsExtractPath -Force
+
+    # Install dependencies
+    Get-ChildItem "$depsExtractPath\x64\*.appx" | ForEach-Object {
+        Write-Host "Installing dependency: $($_.Name)"
+        Add-AppxPackage -Path $_.FullName -ErrorAction SilentlyContinue
+    }
+
+    # Provision package for system
+    Write-Host "Provisioning DesktopAppInstaller..."
+    Add-AppxProvisionedPackage -Online `
+        -PackagePath $bundlePath `
+        -LicensePath $licensePath | Out-Null
+
+    # Force registration for current user (critical step)
+    Write-Host "Registering package for current user..."
+    $pkg = Get-AppxPackage -Name Microsoft.DesktopAppInstaller -AllUsers |
+           Sort-Object Version -Descending |
+           Select-Object -First 1
+
+    if ($pkg) {
+        Add-AppxPackage -Register "$($pkg.InstallLocation)\AppxManifest.xml" `
+                        -DisableDevelopmentMode
+    }
+
+    # Refresh PATH in current session
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
+                [System.Environment]::GetEnvironmentVariable("PATH","User")
+
+    # Wait deterministically for winget availability
+    Write-Host "Waiting for winget to become available..."
+    $elapsed = 0
+
+    while (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        Start-Sleep -Seconds 5
+        $elapsed += 5
+
+        if ($elapsed -ge $TimeoutSeconds) {
+            throw "Winget did not become available within $TimeoutSeconds seconds."
+        }
+    }
+
+    Write-Host "Winget installed successfully."
+    winget --version
+}
+
+Install-WinGet
 
 
 
