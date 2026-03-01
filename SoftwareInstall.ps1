@@ -10,8 +10,6 @@ try {
 }
 
 Import-Module C:\ProgramData\chocolatey\helpers\chocolateyProfile.psm1
-refreshenv
-
 
 # Enable Chocolatey features for smoother installs
 try {
@@ -64,7 +62,9 @@ Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.
 Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.WindowsAppRuntime*x64.appx"
 Add-AppxProvisionedPackage -Online -PackagePath "C:\Windows\Temp\WinGet.msixbundle" -LicensePath "C:\Windows\Temp\license.xml"
 Get-AppPackage *Microsoft.DesktopAppInstaller*|select Name,PackageFullName
-winget --info
+
+refreshenv
+
 
 
 
