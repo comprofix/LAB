@@ -11,7 +11,12 @@ Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.
 Add-AppxProvisionedPackage -Online -PackagePath "C:\Windows\Temp\WinGet.msixbundle" -LicensePath "C:\Windows\Temp\license.xml"
 Get-AppPackage *Microsoft.DesktopAppInstaller* | Select-Object Name, PackageFullName
 
-Invoke-WebRequest "https://raw.githubusercontent.com/chocolatey/choco/refs/heads/develop/src/chocolatey.resources/redirects/RefreshEnv.cmd" -OutFile "C:\Windows\system32\RefreshEnv.cmd"
+Install-PackageProvider -Name "NuGet" -Force
+Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
+Install-Script -Name RefreshEnv 
+Refresh-EnvironmentVariables
+winget --info
+
 #RefreshEnv
 #winget --info
 
