@@ -16,8 +16,6 @@ Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
 Install-Script Refresh-EnvironmentVariables -Force
 Refresh-EnvironmentVariables
 
-Install-Script Refresh-EnvironmentVariables -Force
-
 winget update --accept-package-agreements --accept-source-agreements
 
 
