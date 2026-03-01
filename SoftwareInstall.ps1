@@ -9,9 +9,10 @@ Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.
 Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.VCLibs*x64.appx"
 Add-AppxPackage "C:\Windows\Temp\DesktopAppInstaller_Dependencies\x64\Microsoft.WindowsAppRuntime*x64.appx"
 Add-AppxProvisionedPackage -Online -PackagePath "C:\Windows\Temp\WinGet.msixbundle" -LicensePath "C:\Windows\Temp\license.xml"
-Get-AppPackage *Microsoft.DesktopAppInstaller*|select Name,PackageFullName
+Get-AppPackage *Microsoft.DesktopAppInstaller* | Select-Object Name, PackageFullName
 
-Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/chocolatey/choco/refs/heads/develop/src/chocolatey.resources/redirects/RefreshEnv.cmd" | Invoke-Expression
+Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/chocolatey/choco/refs/heads/develop/src/chocolatey.resources/redirects/RefreshEnv.cmd" -OutFile C:\Windows\Temp\RefreshEnv.cmd
+& C:\Windows\Temp\RefreshEnv.cmd
 winget --info
 
 # [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
