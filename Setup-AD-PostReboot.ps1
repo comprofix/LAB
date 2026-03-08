@@ -6,11 +6,11 @@
 # ------------------ Configurable Variables ------------------
 $DomainName         = "LAB.local"
 $DhcpScopeName      = "LAB"
-$DhcpStartRange     = "192.168.100.100"
-$DhcpEndRange       = "192.168.100.199"
+$DhcpStartRange     = "192.168.10.100"
+$DhcpEndRange       = "192.168.10.199"
 $DhcpSubnetMask     = "255.255.255.0"
-$DhcpGateway        = "192.168.100.1"
-$DhcpDnsServer      = "192.168.100.2"  # This server's static IP
+$DhcpGateway        = "192.168.10.1"
+$DhcpDnsServer      = "192.168.10.1"  # This server's static IP
 $DefaultOUPath      = "DC=LAB,DC=local"
 $LABOU              = "OU=LAB,$DefaultOUPath"
 
@@ -19,7 +19,7 @@ Write-Host "`n[INFO] Authorizing DHCP server..." -ForegroundColor Cyan
 Add-DhcpServerInDC -DnsName "$env:COMPUTERNAME.$DomainName" -IPAddress $DhcpDnsServer -ErrorAction SilentlyContinue
 
 # ------------------ Create DHCP scope if missing ------------------
-if (-not (Get-DhcpServerv4Scope -ScopeId 192.168.100.0 -ErrorAction SilentlyContinue)) {
+if (-not (Get-DhcpServerv4Scope -ScopeId 192.168.10.0 -ErrorAction SilentlyContinue)) {
     Write-Host "[INFO] Adding DHCP scope..." -ForegroundColor Cyan
     Add-DhcpServerv4Scope `
         -Name $DhcpScopeName `
@@ -28,9 +28,9 @@ if (-not (Get-DhcpServerv4Scope -ScopeId 192.168.100.0 -ErrorAction SilentlyCont
         -SubnetMask $DhcpSubnetMask `
         -State Active
 
-    Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -Router $DhcpGateway
-    Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -DnsServer $DhcpDnsServer
-    Set-DhcpServerv4OptionValue -ScopeId 192.168.100.0 -DnsDomain $DomainName
+    Set-DhcpServerv4OptionValue -ScopeId 192.168.10.0 -Router $DhcpGateway
+    Set-DhcpServerv4OptionValue -ScopeId 192.168.10.0 -DnsServer $DhcpDnsServer
+    Set-DhcpServerv4OptionValue -ScopeId 192.168.10.0 -DnsDomain $DomainName
 } else {
     Write-Host "[INFO] DHCP scope already exists. Skipping." -ForegroundColor Yellow
 }

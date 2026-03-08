@@ -21,18 +21,13 @@ Install-WindowsFeature `
     RSAT-DHCP -IncludeManagementTools
 
 # ------------------ Promote to Domain Controller if needed ------------------
-if (-not (Get-ADDomainController -ErrorAction SilentlyContinue)) {
-    Write-Host "`n[INFO] Promoting this server to first Domain Controller for $DomainName..." -ForegroundColor Cyan
+Write-Host "`n[INFO] Promoting this server to first Domain Controller for $DomainName..." -ForegroundColor Cyan
 
-    Install-ADDSForest `
-        -DomainName $DomainName `
-        -DomainNetbiosName $DomainNetbios `
-        -SafeModeAdministratorPassword $SafeModeAdminPassword `
-        -InstallDNS `
-        -Force `
-        -Restart
+Install-ADDSForest `
+    -DomainName $DomainName `
+    -DomainNetbiosName $DomainNetbios `
+    -SafeModeAdministratorPassword $SafeModeAdminPassword `
+    -InstallDNS `
+    -Force `
+    -Restart
 
-    # Script ends here: server will reboot automatically
-} else {
-    Write-Host "`n[INFO] This machine is already a Domain Controller. Skipping promotion." -ForegroundColor Yellow
-}
